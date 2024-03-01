@@ -1,0 +1,19 @@
+Package: libssl-dev
+Source: openssl
+Version: $VERSION
+Architecture: all
+Maintainer: Debian OpenSSL Team <pkg-openssl-devel@alioth-lists.debian.net>
+Installed-Size: 12448
+Depends: libssl3 (= $VERSION)
+Suggests: libssl-doc
+Section: libdevel
+Priority: optional
+Multi-Arch: foreign
+Homepage: https://www.openssl.org/
+Description: Secure Sockets Layer toolkit - development files
+ This package is part of the OpenSSL project's implementation of the SSL
+ and TLS cryptographic protocols for secure communication over the
+ Internet.
+ .
+ It contains development libraries, header files, and manpages for libssl
+ and libcrypto.

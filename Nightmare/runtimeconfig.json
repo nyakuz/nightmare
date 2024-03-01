@@ -1,0 +1,9 @@
+{
+  "runtimeOptions": {
+    "configProperties": {
+      "\tSystem.GC.HeapHardLimitSOH": 16777216,
+      "\tSystem.GC.HeapHardLimitLOH": 16777216,
+      "\tSystem.GC.HeapHardLimitPOH": 16777216
+    }
+  }
+}

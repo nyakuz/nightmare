@@ -1,0 +1,17 @@
+Package: libnghttp2
+Source: nghttp2
+Version: $VERSION
+Architecture: all
+Maintainer: Tomasz Buchert <tomasz@debian.org>
+Installed-Size: 216
+Depends: libc6 (>= 2.14)
+Section: libs
+Priority: optional
+Multi-Arch: foreign
+Homepage: https://nghttp2.org/
+Description: library implementing HTTP/2 protocol (shared library)
+ This is an implementation of the Hypertext Transfer Protocol version
+ 2 in C. The framing layer of HTTP/2 is implemented as a reusable C
+ library.
+ .
+ This package installs a shared library.

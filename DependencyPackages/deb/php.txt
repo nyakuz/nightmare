@@ -1,0 +1,16 @@
+Package: php
+Version: $VERSION
+Architecture: all
+Maintainer: Debian PHP Maintainers <team+pkg-php@tracker.debian.org>
+Installed-Size: 10
+Depends: libc6 (>= 2.34), libffi8 (>= 3.4), libssl3 (>= 3.0.0)
+Section: php
+Priority: optional
+Multi-Arch: foreign
+Description: server-side, HTML-embedded scripting language (default)
+ PHP (recursive acronym for PHP: Hypertext Preprocessor) is a widely-used
+ open source general-purpose scripting language that is especially suited
+ for web development and can be embedded into HTML.
+ .
+ This package is a dependency package, which depends on latest stable
+ PHP version (currently 8.2).
