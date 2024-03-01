@@ -76,11 +76,11 @@ kex=X25519
 ## Package List
 | Name | Branch | Version | Result Path |
 | --- | --- | --- | --- |
-| OpenSSL+quictls | [openssl-3.0.10+quic](https://github.com/quictls/openssl/tree/openssl-3.0.10) | 3.0.10+quic | /build/openssl.deb |
+| OpenSSL+quictls | [openssl-3.1.5+quic](https://github.com/quictls/openssl/tree/openssl-3.1.5) | 3.1.5+quic | /build/openssl.deb |
 | libssl3 | --- | --- | /build/libssl3.deb |
 | libssl-dev | --- | --- | /build/libssl-dev.deb |
-| NgHttp2 | [v1.56.0](https://github.com/nghttp2/nghttp2/tree/v1.56.0) | 1.56.0 | /build/libnghttp2.deb |
-| NgHttp3 | [v0.15.0](https://github.com/ngtcp2/nghttp3/tree/v0.15.0) | 0.15.0 | /build/libnghttp3.deb |
-| NgTcp2 | [v0.19.1](https://github.com/ngtcp2/ngtcp2/tree/v0.19.1) | 0.19.1 | /build/libngtcp2.deb |
-| Curl | [curl-8_3_0](https://github.com/curl/curl/tree/curl-8_3_0) | 8.3.0 | /build/curl.deb |
-| Php | [php-8.2.10](https://github.com/php/php-src/tree/php-8.2.10) | 8.2.10 | /build/php.deb |
+| NgHttp2 | [v1.59.0](https://github.com/nghttp2/nghttp2/tree/v1.59.0) | 1.59.0 | /build/libnghttp2.deb |
+| NgHttp3 | [v1.2.0](https://github.com/ngtcp2/nghttp3/tree/v1.2.0) | 1.2.0 | /build/libnghttp3.deb |
+| NgTcp2 | [v1.3.0](https://github.com/ngtcp2/ngtcp2/tree/v1.3.0) | 1.3.0 | /build/libngtcp2.deb |
+| Curl | [curl-8_6_0](https://github.com/curl/curl/tree/curl-8_6_0) | 8.6.0 | /build/curl.deb |
+| Php | [php-8.3.3](https://github.com/php/php-src/tree/php-8.3.3) | 8.3.3 | /build/php.deb |
