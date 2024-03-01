@@ -1,6 +1,6 @@
 # Build Package
 
-## 1. 
+## 1. Build Curl (Release)
 Curl recommends downloading the official release of the source file.
 
 [curl](https://curl.se/download.html)
