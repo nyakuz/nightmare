@@ -32,7 +32,7 @@
       "sslPort": 28443,
       "publishAllPorts": true,
       "useSSL": false,
-      "DockerfileRunArguments": "-p 10080:8080 -p 10443:8443/udp -p 10443:8443 -m=\"2g\" --memory-swappiness=100 --memory-swap=-1 --oom-kill-disable -v D:/dev/Nightmare/AspNetCore.Vhost.Test/localhost:/app/vhost/localhost"
+      "DockerfileRunArguments": "-p 10080:8080 -p 10443:8443/udp -p 10443:8443 -m=\"2g\" --memory-swappiness=100 --memory-swap=-1 --oom-kill-disable"
     }
   },
   "iisSettings": {
