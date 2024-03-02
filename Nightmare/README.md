@@ -1,29 +1,6 @@
 ﻿# Nightmare Web Server
 
-## Quick start
-
-```shell
-docker run --name Website1 -d -p 80:8080 -p 8443:443/udp -p 8443:443 \
-  -v <VHOST_DIR>:/app/vhost \
-  nyakuz/nightmare:latest
-```
-
-An example of a vhost path.
-```
-<VHOST_DIR>/
-- anyhost
-- localhost
--- index.php
--- test.csx
--- robots.txt
--- favicon.ico
-- example.com/
--- ..
-- localhost.txt (test.localhost\r\napi.localhost)
-- example.com.txt (www.example.com\r\napi.example.com)
-```
-
-## Installation
+## Build the Dockerfile.
 
 [libxphp](/libxphp/README.md)
 [Building Dependency Packages](/)
@@ -35,6 +12,30 @@ This command builds a Docker image named 'nightmare' using the Dockerfile locate
 This command is an example of running in rootless mode.
 
     docker run --name Website1 -d --restart always -p 80:8080 -p 8443:443/udp -p 8443:443 /home/ubuntu/app/appsettings.json:/app/appsettings.json -v /home/ubuntu/app/kestrel.json:/app/kestrel.json -v /home/ubuntu/app/config:/app/config -v /home/ubuntu/vhost:/app/vhost/ nightmare
+
+## Direct load modules
+Add modules to load from Nightmare > dependencies > projects.
+
+/Main/MainRouter.cs
+```cs
+public MainRouter(IServiceCollection services, string content_root_path) {
+    VhostDirectory = Path.Combine(content_root_path, DefaultVhostDirectory);
+    VirtualHost = new(this);
+
+    foreach(var file in new DirectoryInfo(Path.Combine(content_root_path, "Modules")).GetFiles()) {
+        if(file.Name.StartsWith("X") == false || file.Name.EndsWith(".dll") == false) continue;
+        Console.WriteLine("LoadModule: {0}", file.FullName);
+        //Add(Modules.LoadFromAssemblyPath(file.Name, file.FullName));
+    }
+
+    services.AddScoped<IMysqlService, MysqlService>();
+
+    Add(new XPhpModule.XPhpScript()); // PHP
+    Add(new XCsModule.XCsScript()); // CS
+
+    Update();
+}
+```
 
 ## Error Fix (important)
 
