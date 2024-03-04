@@ -7,7 +7,7 @@ Nightmare is a web server based on AspNetCore that supports the latest protocols
 ## Quick start
 
 ```shell
-docker run --name Website1 -d -p 80:8080 -p 8443:443/udp -p 8443:443 \
+docker run --name Website1 -d -p 80:8080 -p 443:8443/udp -p 443:8443 \
   -v <VHOST_DIR>:/app/vhost \
   nyakuz/nightmare:latest
 ```
