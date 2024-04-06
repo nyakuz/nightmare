@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Configuration;
 using XSAPI;
 
 namespace Nightmare.Main {
@@ -11,9 +12,11 @@ namespace Nightmare.Main {
     public readonly ConcurrentDictionary<string, Module> ModuleExtension = new();
     public readonly HashSet<string> FileExtensionFilter = new();
     public readonly VirtualHostWatcher VirtualHost;
-    public MainRouter(IServiceCollection services, string content_root_path) {
+    public string[] IndexFileExtensions;
+    public MainRouter(IConfiguration config, IServiceCollection services, string content_root_path) {
       VhostDirectory = Path.Combine(content_root_path, DefaultVhostDirectory);
       VirtualHost = new(this);
+      IndexFileExtensions = config.GetValue<string[]>("AppSettings.IndexFileExtensions", [".html",".htm"])!;
 
       foreach(var file in new DirectoryInfo(Path.Combine(content_root_path, "Modules")).GetFiles()) {
         if(file.Name.StartsWith("X") == false || file.Name.EndsWith(".dll") == false) continue;
@@ -81,9 +84,11 @@ namespace Nightmare.Main {
             await sapi.ResponseFile(vhost_fullpath, fileext);
             return;
           }
-          if(File.Exists(vhost_fullpath + ".html") == true) {
-            await sapi.ResponseFile(vhost_fullpath + ".html", ".html");
-            return;
+          foreach(var ext in IndexFileExtensions) {
+            if(File.Exists(vhost_fullpath + ext) == true) {
+              await sapi.ResponseFile(vhost_fullpath + ext, ext);
+              return;
+            }
           }
         }
 

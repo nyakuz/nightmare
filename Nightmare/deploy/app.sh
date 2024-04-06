@@ -1,4 +1,6 @@
 #!/bin/sh
+set +e
+echo 'deploy app.sh'
 
 cd /app
 

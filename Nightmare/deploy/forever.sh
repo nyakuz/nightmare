@@ -1,7 +1,12 @@
 #!/bin/sh
+set +e
+
 if [ ! -d "/app/forever" ]; then
-	exit
+	echo 'exit forever.sh'
+	exit 1
 fi
+
+echo 'deploy forever.sh'
 
 cd /app/forever
 
