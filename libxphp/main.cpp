@@ -32,14 +32,16 @@ int On(
 
 
 #ifdef ZTS
-	auto success = php_tsrm_startup();
-	//auto success = php_tsrm_startup_ex(8); < PHP 8.3.0
+	//auto success = php_tsrm_startup();
+	auto success = php_tsrm_startup_ex(8);// PHP 8.3.0 and later
 	if (success == 0) {
 		return -1;
 	}
+# ifdef PHP_WIN32
+	ZEND_TSRMLS_CACHE_UPDATE();
+# endif
 #endif
 
-	//zend_signal_init(); // This code does not externally use zend_signal_startup().
 	zend_signal_startup();
 	sapi_startup(&sapi_warp_module);
 	if (FAILURE == sapi_warp_module.startup(&sapi_warp_module)) {
@@ -62,12 +64,14 @@ int Off() {
 	return 0;
 }
 int Execute(void* context, char* method, char* content_type, size_t content_length, int filename_index, char* filepath, char* query_string) {
-	int state = 0;
-	//auto tid = tsrm_thread_id();
-
+	int state;
 #ifdef ZTS
-	//ts_resource_ex(0, tid);
-	ts_resource_ex(0, 0);
+	//auto tid = tsrm_thread_id();
+	//auto tls_context = ts_resource_ex(0, tid); // hash table
+	ts_resource(0); // thread context
+# ifdef PHP_WIN32
+	ZEND_TSRMLS_CACHE_UPDATE();
+# endif
 #endif
 
 	SG(server_context) = context;
@@ -78,28 +82,30 @@ int Execute(void* context, char* method, char* content_type, size_t content_leng
 	SG(request_info).content_type = content_type;
 	SG(request_info).content_length = content_length;
 
-	if (SUCCESS == php_request_startup()) {
-		zend_first_try{
+
+	zend_first_try {
+		if (SUCCESS == php_request_startup()) {
 			zval retval;
 			zend_file_handle file_handle;
 			zend_stream_init_filename(&file_handle, filepath);
 			file_handle.primary_script = 1;
 
-			PG(during_request_startup) = 0;
-			state = zend_execute_scripts(ZEND_REQUIRE, &retval, 1, &file_handle);
+			state = zend_execute_scripts(ZEND_INCLUDE, &retval, 1, &file_handle);
+			zend_destroy_file_handle(&file_handle);
+
 			if(state == SUCCESS){
-				state <<= 4;
-				state |= Z_LVAL_P(&retval);
+				state = Z_LVAL_P(&retval);
 				zval_ptr_dtor(&retval);
 			}
+		} else {
+			zend_bailout();
+			state = -1;
+		}
+	} zend_catch {
+			state = -1;
+	} zend_end_try();
 
-			zend_destroy_file_handle(&file_handle);
-		} zend_catch {
-
-		} zend_end_try();
-
-		php_request_shutdown(nullptr);
-	}
+	php_request_shutdown(nullptr);
 
 #ifdef ZTS
 	ts_free_thread();

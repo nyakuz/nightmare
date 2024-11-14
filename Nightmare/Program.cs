@@ -1,7 +1,8 @@
-using Nightmare.Main;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Quic;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
+using Microsoft.AspNetCore.StaticFiles;
+using Nightmare.Main;
 
 
 AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs args) => {
@@ -12,24 +13,20 @@ AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledException
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions() {
   Args = args,
   ContentRootPath = Directory.GetCurrentDirectory(),
-  WebRootPath = Directory.GetCurrentDirectory() + "/wwwroot"
+  WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")
 });
-Directory.SetCurrentDirectory(Directory.GetCurrentDirectory() + "/vhost/null");
+Directory.SetCurrentDirectory(Path.Combine(Directory.GetCurrentDirectory(), "vhost", "null"));
 
-
-var appsettings = builder.Configuration.AddJsonFile("/app/kestrel.json", false, true).Build();
-appsettings.Reload();
 builder.WebHost.ConfigureKestrel((context, options) => {
-  options.AddServerHeader = appsettings.GetValue("Kestrel:AddServerHeader",false);
-  options.Limits.MaxRequestBodySize = appsettings.GetValue("Kestrel:Limits:MaxRequestBodySize", 104857600); //100mb
-  
-  context.Configuration["Kestrel:Endpoints:Http:Url"] = appsettings["Kestrel:Endpoints:Http:Url"];
-  context.Configuration["Kestrel:Endpoints:Https:Url"] = appsettings["Kestrel:Endpoints:Https:Url"];
+  options.AllowSynchronousIO = true;
+  options.AddServerHeader = context.Configuration.GetValue("Kestrel:AddServerHeader", false);
+  options.Limits.MaxRequestBodySize = context.Configuration.GetValue("Kestrel:Limits:MaxRequestBodySize", 104857600); // only multipart/form-data 104857600 == 100mb
 });
 
+builder.Services.AddHealthChecks();
 builder.Services.AddSignalR();
 builder.Services.AddHttpContextAccessor();
-// builder.Services.AddResponseCaching();
+/*builder.Services.AddResponseCaching();
 builder.Services.AddResponseCompression(options => {
   options.EnableForHttps = true;
   options.Providers.Add<BrotliCompressionProvider>();
@@ -37,21 +34,22 @@ builder.Services.AddResponseCompression(options => {
   options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] {
     "application/octet-stream"
   });
+});*/
+builder.Services.Configure<SocketTransportOptions>(options => {
+  options.CreateBoundListenSocket = endpoint => {
+    var socket = SocketTransportOptions.CreateDefaultBoundListenSocket(endpoint);
+    return socket;
+  };
 });
-builder.Services.Configure<GzipCompressionProviderOptions>(options => {
+builder.Services.Configure<QuicTransportOptions>(options => {
+  
+});
+/*builder.Services.Configure<GzipCompressionProviderOptions>(options => {
   options.Level = System.IO.Compression.CompressionLevel.Fastest;
-  /* IMPORTANT: The following code block has a significant OOM memory issue.
-    options.Level = System.IO.Compression.CompressionLevel.Optimal;
-    options.Level = System.IO.Compression.CompressionLevel.SmallestSize;
-  */
 });
 builder.Services.Configure<BrotliCompressionProviderOptions>(options => {
   options.Level = System.IO.Compression.CompressionLevel.Fastest;
-  /* IMPORTANT: The following code block has a significant OOM memory issue.
-    options.Level = System.IO.Compression.CompressionLevel.Optimal;
-    options.Level = System.IO.Compression.CompressionLevel.SmallestSize;
-  */
-});
+});*/
 builder.Services.Configure<StaticFileOptions>(options => {
   options.ServeUnknownFileTypes = true;
   options.ContentTypeProvider = new FileExtensionContentTypeProvider();
@@ -73,43 +71,63 @@ builder.Services.AddControllers(options => {
   options.InputFormatters.Add(new TextPlain());
 });
 builder.Services.AddSingleton<MimeTypeSingleton>();
-builder.Services.AddSingleton(new MainRouter(builder.Services, builder.Environment.ContentRootPath));
+builder.Services.AddSingleton(new MainRouter(builder.Configuration, builder.Services, builder.Environment.ContentRootPath));
 builder.Services.AddScoped<ISecureService, SecureService>();
 
 builder.Services.AddControllersWithViews();
-#if DEBUG
-builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
+/*#if DEBUG
+  builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 #else
   builder.Services.AddRazorPages();
-#endif
+#endif*/
 
 
 var app = builder.Build();
-
-// app.UseResponseCaching();
-app.UseResponseCompression();
-app.UseSession();
-app.UseStaticFiles();
-app.UseMiddleware<MainMiddleware>();
-
+var webServerConfig = app.Configuration.GetSection("AppSettings:WebServer");
+var signalRConfig = app.Configuration.GetSection("AppSettings:SignalR");
+var errorpath = webServerConfig.GetValue("ErrorPageFilePath", "/error")!;
+var healthpath = webServerConfig.GetValue("HealthPageFilePath", "/healthz")!;
 
 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 #if DEBUG
-app.UseDeveloperExceptionPage();
+  app.UseDeveloperExceptionPage();
 #else
-  app.UseExceptionHandler("/Error");
+  app.UseExceptionHandler(errorpath);
   app.UseHsts();
 #endif
 
+/*app.Use((context, next) => {
+  var feature = context.Features.GetRequiredFeature<IHttpWebTransportFeature>();
 
+  context.Response.Headers.AltSvc = $"h3=\":{context.Request.Host.Port}\"";
+
+  if(!feature.IsWebTransportRequest) {
+    return next(context);
+  }
+
+  var session = feature.AcceptAsync(CancellationToken.None).Result;
+  var stream = session.OpenUnidirectionalStreamAsync(CancellationToken.None).Result;
+
+  return next(context);
+});*/
+app.UseSession();
+//app.UseResponseCaching();
+//app.UseResponseCompression();
+app.UseStaticFiles();
 app.UseRouting();
-app.MapControllers();
-app.MapRazorPages();
-app.MapHub<MainHub>("/~", options => {
-  options.Transports =
-    Microsoft.AspNetCore.Http.Connections.HttpTransportType.ServerSentEvents |
-    Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
-});
+app.UseMiddleware<MainMiddleware>();
 
+app.MapControllers();
+app.MapHealthChecks(healthpath).DisableHttpMetrics();
+//app.MapRazorPages();
+app.MapHub<MainHub>("/~", options => {
+  var transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.None;
+  foreach(var typename in signalRConfig.GetSection("TransportType").Get<string[]>() ?? ["ServerSentEvents", "LongPolling"]) {
+    if(Enum.TryParse(typename, out Microsoft.AspNetCore.Http.Connections.HttpTransportType value) == true) {
+      transports |= value;
+    }
+  }
+  options.Transports = transports;
+});
 
 app.Run();

@@ -133,7 +133,6 @@
     <ClCompile Include="sapi_module.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="csharp.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="ref.h" />
     <ClInclude Include="sapi.h" />

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Concurrent;
-using System.Configuration;
+using System.Net;
 using XSAPI;
 
 namespace Nightmare.Main {
-  public class MainRouter {
+	public class MainRouter {
     public const string DefaultVhostDirectory = "vhost/";
     public const string DefaultAnyhostDirectory = "anyhost/";
 
@@ -13,21 +13,31 @@ namespace Nightmare.Main {
     public readonly HashSet<string> FileExtensionFilter = new();
     public readonly VirtualHostWatcher VirtualHost;
     public string[] IndexFileExtensions;
+
     public MainRouter(IConfiguration config, IServiceCollection services, string content_root_path) {
       VhostDirectory = Path.Combine(content_root_path, DefaultVhostDirectory);
       VirtualHost = new(this);
-      IndexFileExtensions = config.GetValue<string[]>("AppSettings.IndexFileExtensions", [".html",".htm"])!;
+      var WebServerConfig = config.GetSection("AppSettings:WebServer");
+      IndexFileExtensions = WebServerConfig.GetSection("IndexFileExtensions").Get<string[]>() ?? [".html", ".htm"];
 
       foreach(var file in new DirectoryInfo(Path.Combine(content_root_path, "Modules")).GetFiles()) {
         if(file.Name.StartsWith("X") == false || file.Name.EndsWith(".dll") == false) continue;
-        Console.WriteLine("LoadModule: {0}", file.FullName);
+#if DEBUG
+        Console.WriteLine("SkipModule: {0}", file.FullName);
+#else
+				Console.WriteLine("LoadModule: {0}", file.FullName);
         Add(Modules.LoadFromAssemblyPath(file.Name, file.FullName));
+#endif
       }
 
       services.AddScoped<IMysqlService, MysqlService>();
 
-      //Add(new XPhpModule.XPhpScript());
-      //Add(new XCsModule.XCsScript());
+#if DEBUG
+			Console.WriteLine("LoadModule: XPhpModule.XPhpScript");
+			Add(new XPhpModule.XPhpScript());
+			Console.WriteLine("LoadModule: XCsModule.XCsScript");
+			Add(new XCsModule.XCsScript());
+#endif
 
       Update();
     }
@@ -86,7 +96,8 @@ namespace Nightmare.Main {
           }
           foreach(var ext in IndexFileExtensions) {
             if(File.Exists(vhost_fullpath + ext) == true) {
-              await sapi.ResponseFile(vhost_fullpath + ext, ext);
+							sapi.SetHttpState((int)HttpStatusCode.OK);
+							await sapi.ResponseFile(vhost_fullpath + ext, ext);
               return;
             }
           }
@@ -101,6 +112,7 @@ namespace Nightmare.Main {
           if(File.Exists(tmp) == true) {
             var vhost_filepath2 = req_path + tmp_extension;
 
+            sapi.SetHttpState((int)HttpStatusCode.OK);
             sapi.SetVhostPath(vpath_dir, vhost_filepath2, tmp);
             await module.InvokePage(sapi);
 
@@ -114,7 +126,8 @@ namespace Nightmare.Main {
           var tmp = vpath_dir + vhost_router;
 
           if(File.Exists(tmp) == true) {
-            sapi.SetVhostPath(vpath_dir, vhost_router, tmp);
+						sapi.SetHttpState((int)HttpStatusCode.OK);
+						sapi.SetVhostPath(vpath_dir, vhost_router, tmp);
             var code = await module.InvokePage(sapi);
 
             switch(code) {

@@ -4,6 +4,10 @@
       None, Page, Link
     }
 
+    unsafe public static Span<byte> ToSpan(nint bytes_ptr, int size) {
+      return new Span<byte>((byte*)bytes_ptr, size);
+    }
+
     public SapiType Type { get; set; }
     public string VhostDirectory = string.Empty;
     public string VhostFilePath = string.Empty;

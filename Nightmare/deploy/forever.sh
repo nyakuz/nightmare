@@ -1,5 +1,5 @@
 #!/bin/sh
-set +e
+set +e 
 
 if [ ! -d "/app/forever" ]; then
 	echo 'exit forever.sh'

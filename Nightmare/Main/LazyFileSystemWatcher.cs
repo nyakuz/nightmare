@@ -66,10 +66,11 @@ namespace Nightmare.Main {
       try {
         await Task.Delay(millisecondsDelay, cts.Token);
 
+        TaskToken.TryRemove(fullpath, out _);
         TaskQueue.Enqueue(new QueueInfo(fullpath, type, e));
 
-        if(TaskQueue.Count == 0) {
-          await Task.Run(Execute);
+        if(TaskQueue.Count > 0) {
+          await Task.Factory.StartNew(Execute);
         }
       } catch(TaskCanceledException) { }
     }
@@ -86,8 +87,6 @@ namespace Nightmare.Main {
         case EventType.Rename: LazyRenamed?.Invoke(this, info.EventArg); break;
         case EventType.Change: LazyChanged?.Invoke(this, info.EventArg); break;
         }
-
-        TaskToken.TryRemove(info.FullPath, out _);
       }
     }
   }

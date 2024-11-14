@@ -13,7 +13,7 @@ zend_module_entry nightmare_module_entry = {
     STANDARD_MODULE_PROPERTIES
 };
 
-void variable() {
+/*void variable() {
   switch (Z_TYPE(args[i])) {
   case IS_NULL:
     php_printf("Argument %d is NULL\n", i + 1);
@@ -39,10 +39,15 @@ void variable() {
   default:
     php_printf("Argument %d is of unknown type\n", i + 1);
   }
-}
+}*/
 
-PHP_FUNCTION(test1)
-{
+PHP_FUNCTION(test1) {
+  ZEND_PARSE_PARAMETERS_NONE();
+
+  php_printf("The extension %s is loaded and working!\r\n", "%EXTNAME%");
+  /*zval* args;
+  int argc;
+
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "+", &args, &argc) == SUCCESS) {
     for (auto i = 0; i < argc; i++) {
 
@@ -55,5 +60,5 @@ PHP_FUNCTION(test1)
     break;
   case 3:
     break;
-  }
+  }*/
 }

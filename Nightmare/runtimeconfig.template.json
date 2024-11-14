@@ -1,0 +1,8 @@
+{
+  "configProperties": {
+    "System.Threading.ThreadPool.MinThreads": 200,
+    "System.Threading.ThreadPool.MaxThreads": 200,
+    "System.Threading.ThreadPool.Blocking.DelayStepMs": 200,
+    "System.Threading.ThreadPool.Blocking.MaxDelayMs": 200
+  }
+}

@@ -6,8 +6,8 @@
 #include <cstddef>
 #include <functional>
 
-#include "http_status_codes.h"
 #include <main/php.h>
+#include <main/http_status_codes.h>
 #include <main/SAPI.h>
 #include <main/php_main.h>
 

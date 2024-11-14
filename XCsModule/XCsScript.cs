@@ -6,8 +6,8 @@ using XSAPI;
 
 namespace XCsModule {
   public class XCsScript : Module {
-    public static IEnumerable<string> IndexFileList = new[] { "index" };
-    public static IEnumerable<string> FileExtensionList = new[] { ".csx" };
+    public static IEnumerable<string> IndexFileList = ["index"];
+    public static IEnumerable<string> FileExtensionList = [".csx"];
     public static readonly AssemblyResolver Resolver = new();
     public static readonly ScriptBuilder Builder;
     static readonly ConcurrentDictionary<string, ScriptContext> VirtualHostContext = new();

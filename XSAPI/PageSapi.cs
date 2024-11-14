@@ -20,7 +20,7 @@ namespace XSAPI {
     public abstract void SendHeaderCallback(string name, string value);
     public abstract long UbWriteCallback(ReadOnlySpan<byte> str, long str_length);
     public abstract ValueTask<int> SendFlushCallback();
-    public abstract long ReadPostCallback(Span<byte> buf, long count_bytes);
+    public abstract ValueTask<long> ReadPostCallback(nint buf, long count_bytes);
     public abstract string ReadCookiesCallback();
     public abstract void ServerParamCallback(Action<string, string> retn);
   }

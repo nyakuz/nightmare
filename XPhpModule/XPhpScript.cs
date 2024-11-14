@@ -6,7 +6,6 @@ namespace XPhpModule {
   public class XPhpScript: Module {
     public const int PHP_SUCCESS = 0;
     public readonly static ConcurrentDictionary<nuint, Sapi> CaseScript = new();
-    public static int uid = 0;
 
 
     static XPhpScript() {
@@ -31,10 +30,9 @@ namespace XPhpModule {
     }
 
 
-    public override IEnumerable<string> ScriptFileExtension { get => new[] { ".php", ".inc" }; }
+    public override IEnumerable<string> ScriptFileExtension { get => [".php", ".inc"]; }
     public override IEnumerable<string> FileWatchExtension { get { yield break; } }
     public override ValueTask<int> InvokePage(PageSapi sapi) {
-      //var context = (nuint)uid++;
       var context = tsrm_thread_id();
       
       sapi.GetParameter(out var method, out var content_type, out var content_length, out var query_string);
@@ -107,7 +105,7 @@ namespace XPhpModule {
     unsafe public static long ReadPostCallback(nuint context, byte* buf, long count_bytes) {
       try {
         var buf2 = new Span<byte>(buf, (int)count_bytes);
-        return ((PageSapi)CaseScript[context]).ReadPostCallback(buf2, count_bytes);
+        return ((PageSapi)CaseScript[context]).ReadPostCallback((nint)buf, count_bytes).Result;
       } catch { }
       return 0;
     }

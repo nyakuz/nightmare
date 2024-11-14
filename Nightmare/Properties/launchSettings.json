@@ -28,11 +28,12 @@
     "Docker": {
       "commandName": "Docker",
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/gc",
+      "use64Bit": true,
       "httpPort": 28080,
       "sslPort": 28443,
       "publishAllPorts": true,
       "useSSL": false,
-      "DockerfileRunArguments": "-p 10080:8080 -p 10443:8443/udp -p 10443:8443 -m=\"2g\" --memory-swappiness=100 --memory-swap=-1 --oom-kill-disable"
+      "DockerfileRunArguments": "-p 18080:8080 -p 10443:8443/udp -p 10443:8443 -m 512m --memory-swappiness 100 --memory-swap -1 --oom-kill-disable"
     }
   },
   "iisSettings": {

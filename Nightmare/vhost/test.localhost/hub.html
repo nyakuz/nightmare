@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>signalr</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+<script>
+const connection = new signalR.HubConnectionBuilder()
+	.withUrl("/~",{
+			withCredentials:false,
+			transport:signalR.HttpTransportType.ServerSentEvents
+	})
+	.configureLogging(signalR.LogLevel.Information)
+	.withAutomaticReconnect(()=>{
+		return 3000
+	})
+	.build()
+
+async function start() {
+	try {
+		if(connection.state==signalR.HubConnectionState.Disconnected){
+			await connection.start()
+			console.info("SignalR Connected.")
+		}
+		var code=await connection.invoke("K","cmd","AAA","test")
+		console.info("I",code)
+	} catch (err) {
+		console.error(err)
+		setTimeout(start, 5000)
+	}
+}
+
+connection.on("O", async(method) => {
+	console.info(method)
+})
+connection.on("P", async(method,arg0) => {
+	console.info(method, arg0)
+})
+
+connection.onreconnected(async(err)=>{
+	await start()
+})
+connection.onclose(async() => {
+	await start()
+})
+
+start()
+</script>
+</head>
+<body>
+
+</body>
+</html>

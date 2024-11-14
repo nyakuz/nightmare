@@ -6,91 +6,101 @@ using System.Reflection;
 using System.Reflection.PortableExecutable;
 
 namespace XCsModule {
-  public class ScriptBuilder {
-    public readonly CSharpCompilationOptions Option;
-    public readonly List<PortableExecutableReference> Reference = new();
+	public class ScriptBuilder {
+		public readonly CSharpCompilationOptions Option;
+		public readonly List<PortableExecutableReference> Reference = new();
 
-    public static CSharpCompilation Create(ScriptContext script_context, CSharpCompilation compilation, SyntaxTree syntax_tree) {
-      var model = compilation.GetSemanticModel(syntax_tree);
-      var reference = new List<PortableExecutableReference>();
+		public static CSharpCompilation Create(ScriptContext script_context, CSharpCompilation compilation, SyntaxTree syntax_tree) {
+			var model = compilation.GetSemanticModel(syntax_tree);
+			var reference = new List<PortableExecutableReference>();
 
-      foreach(var node in syntax_tree.GetRoot().DescendantNodes().OfType<IdentifierNameSyntax>()) {
-        var symbol = model.GetSymbolInfo(node).Symbol;
-        if(symbol == null) {
-          var typename = node.ToString();
+			foreach(var node in syntax_tree.GetRoot().DescendantNodes().OfType<IdentifierNameSyntax>()) {
+				var symbol = model.GetSymbolInfo(node).Symbol;
+				if(symbol == null) {
+					var typename = node.ToString();
 
-          if(script_context.TryGetValue(typename, out var item) == true) {
-            reference.Add(item.Metadata.GetReference());
-          }
-        }
-      }
+					if(script_context.TryGetValue(typename, out var item) == true) {
+						reference.Add(item.Metadata.GetReference());
+					}
+				}
+			}
 
-      return compilation.AddReferences(reference);
-    }
+			return compilation.AddReferences(reference);
+		}
 
 
-    public ScriptBuilder(CSharpCompilationOptions option, IEnumerable<MetadataReference> reference, params string[] reference_path) {
-      Option = option;
+		public ScriptBuilder(CSharpCompilationOptions option, IEnumerable<MetadataReference> reference, params string[] reference_path) {
+			Option = option;
 
-      foreach(var metadata in reference) {
-        Reference.Add((PortableExecutableReference)metadata);
-      }
+			foreach(var metadata in reference) {
+				Reference.Add((PortableExecutableReference)metadata);
+			}
 
-      for(var i = 0; i < reference_path.Length; i++) {
-        foreach(var file in new DirectoryInfo(reference_path[i]).EnumerateFiles("*.dll")) {
-          Reference.Add(MetadataReference.CreateFromFile(file.FullName));
-        }
-      }
-    }
+			for(var i = 0; i < reference_path.Length; i++) {
+				var dir = new DirectoryInfo(reference_path[i]);
 
-    public IEnumerable<MetadataReference> EnumReferences(ScriptContext script_context) {
-      foreach(var metadata in Reference) {
-        yield return metadata;
-      }
+				if(dir.Parent == null) {
+					continue;
+				}
 
-      foreach(var (_, script_reference) in script_context.AsEnumerable()) {
-        yield return script_reference.Metadata.GetReference();
-      }
-    }
+				if (dir.Exists == false) {
+					dir = dir.Parent.GetDirectories(dir.Name.Substring(0, 1) + "*").First();
+				}
 
-    public bool Build(ScriptContext script_context, string script_filepath, out AssemblyScript? script, out AssemblyMetadata? metadata, out Assembly? assembly) {
-      using var fs = File.OpenRead(script_filepath);
+				foreach (var file in dir.EnumerateFiles("*.dll")) {
+					Reference.Add(MetadataReference.CreateFromFile(file.FullName));
+				}
+			}
+		}
 
-      var context = new AssemblyScript();
-      var filename = Path.GetFileNameWithoutExtension(script_filepath);
-      var syntax_tree = CSharpSyntaxTree.ParseText(SourceText.From(fs), path: script_filepath);
+		public IEnumerable<MetadataReference> EnumReferences(ScriptContext script_context) {
+			foreach(var metadata in Reference) {
+				yield return metadata;
+			}
 
-      var compilation = CSharpCompilation.Create(
-        filename,
-        new[] { syntax_tree },
-        EnumReferences(script_context),
-        Option
-      );
+			foreach(var (_, script_reference) in script_context.AsEnumerable()) {
+				yield return script_reference.Metadata.GetReference();
+			}
+		}
 
-      using var ms = new MemoryStream();
-      var result = Create(script_context, compilation, syntax_tree).Emit(ms);
+		public bool Build(ScriptContext script_context, string script_filepath, out AssemblyScript? script, out AssemblyMetadata? metadata, out Assembly? assembly) {
+			using var fs = File.OpenRead(script_filepath);
 
-      if(result.Success == true) {
-        script = context;
+			var context = new AssemblyScript();
+			var filename = Path.GetFileNameWithoutExtension(script_filepath);
+			var syntax_tree = CSharpSyntaxTree.ParseText(SourceText.From(fs), path: script_filepath);
 
-        ms.Position = 0;
-        assembly = context.LoadFromStream(ms);
+			var compilation = CSharpCompilation.Create(
+				filename,
+				[syntax_tree],
+				EnumReferences(script_context),
+				Option
+			);
 
-        ms.Position = 0;
-        metadata = AssemblyMetadata.CreateFromStream(ms, PEStreamOptions.LeaveOpen | PEStreamOptions.PrefetchMetadata);
+			using var ms = new MemoryStream();
+			var result = Create(script_context, compilation, syntax_tree).Emit(ms);
 
-        return true;
-      } else {
-        script = null;
-        assembly = null;
-        metadata = null;
+			if(result.Success == true) {
+				script = context;
 
-        foreach(var msg in result.Diagnostics) {
-          Console.Error.WriteLine("{0} {1} {2}", script_filepath, msg.Id, msg.GetMessage());
-        }
-      }
+				ms.Position = 0;
+				assembly = context.LoadFromStream(ms);
 
-      return false;
-    }
-  }
+				ms.Position = 0;
+				metadata = AssemblyMetadata.CreateFromStream(ms, PEStreamOptions.LeaveOpen | PEStreamOptions.PrefetchMetadata);
+
+				return true;
+			} else {
+				script = null;
+				assembly = null;
+				metadata = null;
+
+				foreach(var msg in result.Diagnostics) {
+					Console.Error.WriteLine("{0} {1} {2}", script_filepath, msg.Id, msg.GetMessage());
+				}
+			}
+
+			return false;
+		}
+	}
 }

@@ -1,35 +1,49 @@
-# Debug libxphp
+# TestDotNet
 
 ## 1. Create Temporary Container for Build
 You can use the following Docker commands based on your shell.
 
-PowerShell
+```console
+docker run -it --rm --name debug1 --cap-add=NET_ADMIN --cap-add=SYS_PTRACE --security-opt seccomp=unconfined -v ./AspNetCore.Nightmare:/Nightmare -v src:/src mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim bash
+```
 
-	docker run -it --rm --name build1 -v ${PWD}/AspNetCore.Nightmare:/Nightmare -v src:/src mcr.microsoft.com/dotnet/sdk bash
-
-bash
-
-	docker run -it --rm --name build1 -v ${pwd}/AspNetCore.Nightmare:/Nightmare -v src:/src mcr.microsoft.com/dotnet/sdk bash
+Use "./" in Bash, "${PWD}/" in PowerShell, and "%CD%" in batch for current directory in command.
 
 
 ## 2. Set Up Build Environment
 
-	apt clean && apt update
-	apt install -y /Nightmare/openssl.deb /Nightmare/libssl3.deb /Nightmare/libssl-dev.deb /Nightmare/libnghttp3.deb /Nightmare/libnghttp2.deb /Nightmare/libngtcp2.deb /Nightmare/curl.deb /Nightmare/php.deb
-	apt install -y libxml2 libpq5 libsqlite3-0 libonig5 libargon2-1
-	cd /Nightmare/libxphp/testcpp
+```console
+apt clean && apt update
+apt install -y pkg-config build-essential autoconf bison re2c libtool dpkg-dev cmake
+pushd /Nightmare/DependencyPackages/build
+apt install -y ./openssl.deb ./libssl3.deb ./libssl-dev.deb ./libnghttp3.deb ./libnghttp2.deb ./libngtcp2.deb ./curl.deb ./php.deb
+popd
+apt install -y libxml2 libpq5 libsqlite3-0 libonig5 libargon2-1
+#ln -s /usr/lib/$(uname -m)-linux-gnu/libssl.so /usr/lib/libssl.so.3
+#ln -s /usr/lib/$(uname -m)-linux-gnu/libcrypto.so /usr/lib/libcrypto.so.3
+ldconfig
+export LD_LIBRARY_PATH=/usr/local/lib:/Nightmare/Nightmare/Modules:$LD_LIBRARY_PATH
+export LD_PRELOAD=/usr/local/lib/libphp.so
+export XPHP_CWD=/Nightmare/TestCpp
+export XPHP_INI=/Nightmare/TestCpp/php.ini
+```
 
 
-## 3. Build main.cpp
+## 3. Build
 
-	gcc -g -o main main.cpp -DZTS -L/Nightmare/Nightmare/Modules -I/Nightmare/libxphp -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/Zend -I/usr/local/include/php/TSRM -lxphp -lpthread -lstdc++
+```console
+cd /Nightmare/TestDotnet
+ln -s /usr/lib/$(uname -m)-linux-gnu/libssl.so /usr/lib/libssl.so.1.0.0
+dotnet build TestDotnet.csproj
+dotnet run TestDotnet.csproj > output.html
+```
 
 
 ## 4. Debug
 
-	export XPHP_CWD=/libxphp/testdotnet/
-	export XPHP_INI=/libxphp/testdotnet/php.ini
-	export LD_LIBRARY_PATH=/usr/local/lib:/libxphp
-	export LD_PRELOAD=/usr/local/lib/libphp.so
-	gdb ./main
-	run
+```console
+apt clean && apt update
+apt install -y gdb
+gdb ./main
+run
+```

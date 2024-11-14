@@ -1,5 +1,5 @@
 #!/bin/sh
-set +e
+set +e 
 
 result = $(mysqld --version)
 if [[ $result = *"not found" ]]; then

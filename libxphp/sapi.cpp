@@ -1,4 +1,5 @@
 #include "sapi.h"
+#include "sapi_module.h"
 #include <algorithm>
 
 #define SAPI_MAX_HEADER_LENGTH 1024
@@ -30,7 +31,7 @@ sapi_module_struct sapi_warp_module = {
 
 
 int sapi_php_startup(sapi_module_struct* sapi_module) {
-	return php_module_startup(sapi_module, nullptr);
+	return php_module_startup(sapi_module, &nightmare_module_entry);
 }
 
 size_t sapi_ub_write(const char* str, size_t str_length) {
@@ -39,17 +40,16 @@ size_t sapi_ub_write(const char* str, size_t str_length) {
 }
 
 void sapi_flush(void* server_context) {
-	auto context = SG(server_context);
-	ref_flush(context);
+	ref_flush(server_context);
 }
 
 int sapi_send_headers(sapi_headers_struct* sapi_headers) {
+	auto context = SG(server_context);
 	char buf[SAPI_MAX_HEADER_LENGTH];
 	sapi_header_struct* h;
 	zend_llist_position pos;
 	bool ignore_status = 0;
 	int response_status = SG(sapi_headers).http_response_code;
-	auto context = SG(server_context);
 
 
 	if (SG(sapi_headers).http_response_code != 200) {
@@ -143,10 +143,11 @@ void sapi_php_register_variables_retn(zval* track_vars_array, char* key, char* v
 }
 
 void sapi_php_register_variables(zval* track_vars_array) {
+	auto context = SG(server_context);
 	char* php_self = (char*)(SG(request_info).request_uri ? SG(request_info).request_uri : "");
+
 	size_t php_self_len = strlen(php_self);
 
-	auto context = SG(server_context);
 	auto feedback = [track_vars_array](char* key, char* val) {
 		size_t new_val_len;
 
@@ -163,5 +164,5 @@ void sapi_php_register_variables(zval* track_vars_array) {
 }
 
 void sapi_php_log_message(const char* message, int syslog_type_int) {
-	fprintf(stderr, "%s\n", message);
+	//fprintf(stderr, "%s\n", message); // If this fprintf function call to stderr is executed, it will exit the ASP.NET Core server with a return code of 0.
 }

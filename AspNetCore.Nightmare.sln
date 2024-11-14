@@ -27,7 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5. Test", "5. Test", "{EA46
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestCpp", "TestCpp\TestCpp.vcxproj", "{7E4DE1AD-510A-4D27-9FCE-322E6051CEE6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDotnet", "TestDotnet\TestDotnet.csproj", "{0842C9D6-821C-4FE3-936C-DB84C55B24C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDotnet", "TestDotnet\TestDotnet.csproj", "{0842C9D6-821C-4FE3-936C-DB84C55B24C2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0. Dependency Packages", "0. Dependency Packages", "{D09956E7-8410-4341-BC04-6873A2B18FBE}"
 EndProject
@@ -60,6 +60,7 @@ Global
 		{DAEF7EF2-0799-4308-A7A6-8B033975046B}.Debug|x86.ActiveCfg = Debug|Win32
 		{DAEF7EF2-0799-4308-A7A6-8B033975046B}.Debug|x86.Build.0 = Debug|Win32
 		{DAEF7EF2-0799-4308-A7A6-8B033975046B}.Release|Any CPU.ActiveCfg = Release|x64
+		{DAEF7EF2-0799-4308-A7A6-8B033975046B}.Release|Any CPU.Build.0 = Release|x64
 		{DAEF7EF2-0799-4308-A7A6-8B033975046B}.Release|x64.ActiveCfg = Release|x64
 		{DAEF7EF2-0799-4308-A7A6-8B033975046B}.Release|x64.Build.0 = Release|x64
 		{DAEF7EF2-0799-4308-A7A6-8B033975046B}.Release|x86.ActiveCfg = Release|Win32
