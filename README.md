@@ -23,6 +23,6 @@ An example of a vhost path.
 -- favicon.ico
 - example.com/
 -- ..
-- localhost.txt (test.localhost\r\napi.localhost)
-- example.com.txt (www.example.com\r\napi.example.com)
+- localhost.txt (test.localhost\n\napi.localhost)
+- example.com.txt (www.example.com\n\napi.example.com)
 ```
